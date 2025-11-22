@@ -40,12 +40,12 @@ class Menu {
 	public function menu() {
 
 		add_menu_page(
-			__( 'MyPlugin', 'aer-chart-plugin' ),
-			__( 'MyPlugin', 'aer-chart-plugin' ),
+			__( 'AER Charts', 'aer-chart-plugin' ),
+			__( 'AER Charts', 'aer-chart-plugin' ),
 			'manage_options',
 			$this->parent_slug,
 			array( $this, 'admin_page' ),
-			'dashicons-email',
+			'dashicons-chart-line',
 			3
 		);
 
@@ -82,14 +82,14 @@ class Menu {
 				'menu_slug'   => $plugin_url . '/#/basket-prices',
 				'function'    => null, // Uses the same callback function as parent menu.
 			),
-			array(
-				'parent_slug' => $this->parent_slug,
-				'page_title'  => __( 'Inbox', 'aer-chart-plugin' ),
-				'menu_title'  => __( 'Inbox', 'aer-chart-plugin' ),
-				'capability'  => 'manage_options',
-				'menu_slug'   => $plugin_url . '/#/inbox',
-				'function'    => null, // Uses the same callback function as parent menu.
-			),
+			// array(
+			// 	'parent_slug' => $this->parent_slug,
+			// 	'page_title'  => __( 'Inbox', 'aer-chart-plugin' ),
+			// 	'menu_title'  => __( 'Inbox', 'aer-chart-plugin' ),
+			// 	'capability'  => 'manage_options',
+			// 	'menu_slug'   => $plugin_url . '/#/inbox',
+			// 	'function'    => null, // Uses the same callback function as parent menu.
+			// ),
 
 			array(
 				'parent_slug' => $this->parent_slug,
@@ -100,14 +100,14 @@ class Menu {
 				'function'    => null, // Uses the same callback function as parent menu.
 			),
 
-			array(
-				'parent_slug' => $this->parent_slug,
-				'page_title'  => __( 'Settings', 'aer-chart-plugin' ),
-				'menu_title'  => __( 'Settings', 'aer-chart-plugin' ),
-				'capability'  => 'manage_options',
-				'menu_slug'   => $plugin_url . '/#/settings',
-				'function'    => null, // Uses the same callback function as parent menu.
-			),
+			// array(
+			// 	'parent_slug' => $this->parent_slug,
+			// 	'page_title'  => __( 'Settings', 'aer-chart-plugin' ),
+			// 	'menu_title'  => __( 'Settings', 'aer-chart-plugin' ),
+			// 	'capability'  => 'manage_options',
+			// 	'menu_slug'   => $plugin_url . '/#/settings',
+			// 	'function'    => null, // Uses the same callback function as parent menu.
+			// ),
 		);
 
 		$plugin_submenu_pages = apply_filters( 'aer_submenu_pages', $submenu_pages );
