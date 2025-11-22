@@ -29,14 +29,27 @@ class BasketPrices extends Model {
 	protected $table = 'basketprices';
 
 	/**
-	 * The primary key for the model.
+	 * The attributes that are mass assignable.
 	 *
 	 * @var array
 	 */
 	protected $fillable = array(
+		'country_id',
 		'day',
-		'setScore',
+		'value_label_1',
+		'value_label_2',
+		'value_label_3',
+		'setScore', // Keep for backward compatibility
 		'created_at',
 		'updated_at',
 	);
+
+	/**
+	 * Get the country that owns the basket price.
+	 *
+	 * @return \Prappo\WpEloquent\Database\Eloquent\Relations\BelongsTo
+	 */
+	public function country() {
+		return $this->belongsTo( Countries::class, 'country_id' );
+	}
 }

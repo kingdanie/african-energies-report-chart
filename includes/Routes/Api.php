@@ -39,6 +39,15 @@ Route::prefix(
 		$route->post( '/basket-prices/delete', '\AERChartPlugin\Controllers\BasketPrices\Actions@delete' );
 		$route->post( '/basket-prices/update', '\AERChartPlugin\Controllers\BasketPrices\Actions@update' );
 
+		// Define countries API routes.
+		$route->get( '/countries/get', '\AERChartPlugin\Controllers\Countries\Actions@get' );
+		$route->post( '/countries/create', '\AERChartPlugin\Controllers\Countries\Actions@create' );
+		$route->post( '/countries/delete', '\AERChartPlugin\Controllers\Countries\Actions@delete' );
+		$route->post( '/countries/update', '\AERChartPlugin\Controllers\Countries\Actions@update' );
+
+		// Define basket price labels API routes.
+		$route->get( '/basket-price-labels/get', '\AERChartPlugin\Controllers\BasketPriceLabels\Actions@get' );
+		$route->post( '/basket-price-labels/update', '\AERChartPlugin\Controllers\BasketPriceLabels\Actions@update' );
 
 		do_action( 'aer_api', $route );
 	}

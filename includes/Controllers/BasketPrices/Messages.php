@@ -94,5 +94,17 @@ class Messages {
 			'message' => 'basket price not found',
 		);
 	}
+
+	/**
+	 * Returns an error message when basket price already exists.
+	 *
+	 * @return array
+	 */
+	public static function error_basket_price_exists() {
+		return array(
+			'status'  => 'error',
+			'message' => 'basket price already exists for this country and date',
+		);
+	}
 }
 

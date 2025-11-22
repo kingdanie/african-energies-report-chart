@@ -8,6 +8,7 @@ import LoginPage from "./pages/login";
 import Charts from "./pages/charts";
 import Commodities from "./pages/commodities";
 import BasketPrices from "./pages/basket-prices";
+import Countries from "./pages/countries";
 
 export const router = createHashRouter([
   {
@@ -47,6 +48,10 @@ export const router = createHashRouter([
       {
         path: "basket-prices",
         element: <BasketPrices />,
+      },
+      {
+        path: "countries",
+        element: <Countries />,
       }
     ],
   },
