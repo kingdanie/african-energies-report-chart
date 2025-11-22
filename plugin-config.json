@@ -1,0 +1,15 @@
+{
+    "plugin_name":"African Energies Report Chart Plugin",
+    "plugin_description":"A plugin that helps African Energies Report Admins to  manage price data and display on desired page using short codes.",
+    "plugin_version":"1.0.0",
+    "plugin_file_name":"aer-chart-plugin.php",
+    "author_name":"Danie D'mola",
+    "author_uri":"https://github.com/kingdanie",
+    "text_domain":"aer-chart-plugin",
+    "domain_path":"/languages",
+    "main_class_name":"AERChartPlugin",
+    "main_function_name":"aer_chart_plugin_init",
+    "namespace":"AERChartPlugin",
+    "plugin_prefix":"aer",
+    "constant_prefix":"AER"
+}
