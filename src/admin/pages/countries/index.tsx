@@ -19,6 +19,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2 } from "lucide-react";
 
@@ -36,7 +43,7 @@ interface Country {
   name: string;
   code?: string;
   display_order: number;
-  is_active: boolean;
+  is_active: boolean | number;
 }
 
 export default function CountriesPage() {
@@ -45,7 +52,9 @@ export default function CountriesPage() {
   const routePrefix = wpData.routePrefix || "wordpress-plugin-boilerplate/v1";
 
   const [countries, setCountries] = useState<Country[]>([]);
+  const [allCountries, setAllCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCountry, setEditingCountry] = useState<Country | null>(null);
   const [formData, setFormData] = useState<Country>({
@@ -59,6 +68,10 @@ export default function CountriesPage() {
     fetchCountries();
   }, []);
 
+  useEffect(() => {
+    filterCountries();
+  }, [statusFilter, allCountries]);
+
   const fetchCountries = async () => {
     try {
       const response = await fetch(
@@ -66,7 +79,7 @@ export default function CountriesPage() {
       );
       if (response.ok) {
         const data = await response.json();
-        setCountries(data || []);
+        setAllCountries(data || []);
       }
     } catch (error) {
       console.error("Error fetching countries:", error);
@@ -74,6 +87,19 @@ export default function CountriesPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterCountries = () => {
+    let filtered = [...allCountries];
+    
+    if (statusFilter === "active") {
+      filtered = filtered.filter((country) => country.is_active === 1);
+    } else if (statusFilter === "inactive") {
+      filtered = filtered.filter((country) => country.is_active === 0);
+    }
+    // If "all", show all countries (no filtering)
+    
+    setCountries(filtered);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -162,7 +188,21 @@ export default function CountriesPage() {
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Countries</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <div className="flex items-center gap-4">
+          <Select
+            value={statusFilter}
+            onValueChange={(value: "all" | "active" | "inactive") => setStatusFilter(value)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Countries</SelectItem>
+              <SelectItem value="active">Active Only</SelectItem>
+              <SelectItem value="inactive">Inactive Only</SelectItem>
+            </SelectContent>
+          </Select>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={openDialog}>
               <Plus className="mr-2 h-4 w-4" />
@@ -246,6 +286,7 @@ export default function CountriesPage() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card>

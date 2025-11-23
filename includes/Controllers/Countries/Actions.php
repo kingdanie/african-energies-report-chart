@@ -52,9 +52,20 @@ class Actions {
 		}
 
 		// Get optional query parameters
-		$active_only = $request->get_param( 'active_only' ) !== false;
-		$order       = $request->get_param( 'order' ) ? sanitize_text_field( $request->get_param( 'order' ) ) : 'asc';
-		$orderby     = $request->get_param( 'orderby' ) ? sanitize_text_field( $request->get_param( 'orderby' ) ) : 'display_order';
+		$active_only_param = $request->get_param( 'active_only' );
+		// Handle boolean string values from query parameters
+		$active_only = true; // Default to true if not specified
+		if ( $active_only_param !== null ) {
+			// Convert string "false" to boolean false, and "true" or 1 to boolean true
+			if ( $active_only_param === 'false' || $active_only_param === false || $active_only_param === '0' || $active_only_param === 0 ) {
+				$active_only = false;
+			} elseif ( $active_only_param === 'true' || $active_only_param === true || $active_only_param === '1' || $active_only_param === 1 ) {
+				$active_only = true;
+			}
+		}
+		
+		$order   = $request->get_param( 'order' ) ? sanitize_text_field( $request->get_param( 'order' ) ) : 'asc';
+		$orderby = $request->get_param( 'orderby' ) ? sanitize_text_field( $request->get_param( 'orderby' ) ) : 'display_order';
 
 		$query = Countries::orderBy( $orderby, $order );
 
