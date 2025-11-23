@@ -24,22 +24,6 @@ import TeamSwitcher from "@/components/dashboard/team-switcher"
 export default function DashboardPage() {
   return (
     <>
-      <div className="md:hidden">
-        {/* <Image
-          src="/examples/dashboard-light.png"
-          width={1280}
-          height={866}
-          alt="Dashboard"
-          className="block dark:hidden"
-        />
-        <Image
-          src="/examples/dashboard-dark.png"
-          width={1280}
-          height={866}
-          alt="Dashboard"
-          className="hidden dark:block"
-        /> */}
-      </div>
       <div className="hidden dark:bg-gray-900 flex-col md:flex">
         <div className="border-b">
           <div className="flex h-16 items-center px-4">
@@ -150,7 +134,7 @@ export default function DashboardPage() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      Active Now
+                      Active Member States
                     </CardTitle>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -165,9 +149,9 @@ export default function DashboardPage() {
                     </svg>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">+573</div>
+                    <div className="text-2xl font-bold">573</div>
                     <p className="text-xs text-muted-foreground">
-                      +201 since last hour
+                      201 inactive states
                     </p>
                   </CardContent>
                 </Card>

@@ -20,14 +20,21 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, ChevronDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 declare global {
   interface Window {
@@ -55,6 +62,7 @@ export default function CountriesPage() {
   const [allCountries, setAllCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [filterOpen, setFilterOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCountry, setEditingCountry] = useState<Country | null>(null);
   const [formData, setFormData] = useState<Country>({
@@ -189,19 +197,78 @@ export default function CountriesPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Countries</h2>
         <div className="flex items-center gap-4">
-          <Select
-            value={statusFilter}
-            onValueChange={(value: "all" | "active" | "inactive") => setStatusFilter(value)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Countries</SelectItem>
-              <SelectItem value="active">Active Only</SelectItem>
-              <SelectItem value="inactive">Inactive Only</SelectItem>
-            </SelectContent>
-          </Select>
+          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={filterOpen}
+                className="w-[200px] justify-between"
+              >
+                {statusFilter === "all"
+                  ? "All Countries"
+                  : statusFilter === "active"
+                  ? "Active Only"
+                  : "Inactive Only"}
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <Command>
+                <CommandInput placeholder="Search filter..." />
+                <CommandList>
+                  <CommandEmpty>No filter found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="all"
+                      onSelect={() => {
+                        setStatusFilter("all");
+                        setFilterOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          statusFilter === "all" ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      All Countries
+                    </CommandItem>
+                    <CommandItem
+                      value="active"
+                      onSelect={() => {
+                        setStatusFilter("active");
+                        setFilterOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          statusFilter === "active" ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      Active Only
+                    </CommandItem>
+                    <CommandItem
+                      value="inactive"
+                      onSelect={() => {
+                        setStatusFilter("inactive");
+                        setFilterOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          statusFilter === "inactive" ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      Inactive Only
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={openDialog}>

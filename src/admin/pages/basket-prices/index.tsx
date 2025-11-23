@@ -4,6 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -27,7 +40,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, ChevronDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 declare global {
   interface Window {
@@ -74,6 +88,7 @@ export default function BasketPricesPage() {
   const [labels, setLabels] = useState<BasketPriceLabel[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState<number | "all">("all");
+  const [filterOpen, setFilterOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBasketPrice, setEditingBasketPrice] = useState<BasketPrice | null>(null);
   const [formData, setFormData] = useState<BasketPrice>({
@@ -239,22 +254,64 @@ export default function BasketPricesPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Basket Prices</h2>
         <div className="flex items-center gap-4">
-          <Select
-            value={selectedCountry.toString()}
-            onValueChange={(value) => setSelectedCountry(value === "all" ? "all" : parseInt(value))}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filter by Country" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Countries</SelectItem>
-              {countries.map((country) => (
-                <SelectItem key={country.id} value={country.id.toString()}>
-                  {country.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={filterOpen}
+                className="w-[200px] justify-between"
+              >
+                {selectedCountry === "all"
+                  ? "All Countries"
+                  : countries.find((c) => c.id === selectedCountry)?.name || "Select Country"}
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <Command>
+                <CommandInput placeholder="Search country..." />
+                <CommandList>
+                  <CommandEmpty>No country found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="all"
+                      onSelect={() => {
+                        setSelectedCountry("all");
+                        setFilterOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedCountry === "all" ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      All Countries
+                    </CommandItem>
+                    {countries.map((country) => (
+                      <CommandItem
+                        key={country.id}
+                        value={country.id.toString()}
+                        onSelect={() => {
+                          setSelectedCountry(country.id);
+                          setFilterOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedCountry === country.id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {country.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openDialog}>
