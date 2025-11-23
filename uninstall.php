@@ -6,7 +6,10 @@
  * @subpackage Database
  */
 
-use AERChartPlugin\Database\Migrations\Accounts;
+use AERChartPlugin\Database\Migrations\Commodities;
+use AERChartPlugin\Database\Migrations\Countries;
+use AERChartPlugin\Database\Migrations\BasketPriceLabels;
+use AERChartPlugin\Database\Migrations\BasketPrices;
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
@@ -15,4 +18,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 require_once __DIR__ . '/vendor/autoload.php';
 
 // delete tables from database which is created by this plugin.
-Accounts::down();
+BasketPrices::down();
+BasketPriceLabels::down();
+Commodities::down();
+Countries::down();

@@ -15,16 +15,6 @@ Route::prefix(
 	AER_ROUTE_PREFIX,
 	function ( Route $route ) {
 
-		// Define accounts API routes.
-
-		$route->post( '/accounts/create', '\AERChartPlugin\Controllers\Accounts\Actions@create' );
-		$route->get( '/accounts/get', '\AERChartPlugin\Controllers\Accounts\Actions@get' );
-		$route->post( '/accounts/delete', '\AERChartPlugin\Controllers\Accounts\Actions@delete' );
-		$route->post( '/accounts/update', '\AERChartPlugin\Controllers\Accounts\Actions@update' );
-
-		// Posts routes.
-		$route->get( '/posts/get', '\AERChartPlugin\Controllers\Posts\Actions@get_all_posts' );
-		$route->get( '/posts/get/{id}', '\AERChartPlugin\Controllers\Posts\Actions@get_post' );
 		// Allow hooks to add more custom API routes.
 
 		// Define commodities API routes.
