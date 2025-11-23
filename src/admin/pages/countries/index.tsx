@@ -85,6 +85,10 @@ export default function CountriesPage() {
       const data = await response.json();
       return data || [];
     },
+    onError: (error) => {
+      console.error("Error fetching countries:", error);
+      toast.error("Failed to fetch countries");
+    },
   });
 
   // Filter countries based on status filter

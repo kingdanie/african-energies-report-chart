@@ -129,9 +129,12 @@ export default function BasketPricesPage() {
       if (response.ok) {
         const data = await response.json();
         setCountries(data || []);
+      } else {
+        toast.error("Failed to fetch countries");
       }
     } catch (error) {
       console.error("Error fetching countries:", error);
+      toast.error("Failed to fetch countries");
     }
   };
 
@@ -152,9 +155,12 @@ export default function BasketPricesPage() {
         });
         setEditingLabels(labelNames);
         setEditingColors(labelColors);
+      } else {
+        toast.error("Failed to fetch data point labels");
       }
     } catch (error) {
       console.error("Error fetching labels:", error);
+      toast.error("Failed to fetch data point labels");
     }
   };
 
@@ -169,6 +175,8 @@ export default function BasketPricesPage() {
       if (response.ok) {
         const data = await response.json();
         setBasketPrices(data || []);
+      } else {
+        toast.error("Failed to fetch basket prices");
       }
     } catch (error) {
       console.error("Error fetching basket prices:", error);
@@ -371,10 +379,27 @@ export default function BasketPricesPage() {
         toast.success("Label color updated");
         fetchLabels();
       } else {
-        toast.error(result.message);
+        toast.error(result.message || "Failed to update label color");
+        // Revert on error
+        const label = labels.find((l) => l.id === labelId);
+        if (label) {
+          setEditingColors((prev) => ({
+            ...prev,
+            [labelId]: label.color || "#2563eb",
+          }));
+        }
       }
     } catch (error) {
+      console.error("Error updating label color:", error);
       toast.error("Failed to update label color");
+      // Revert on error
+      const label = labels.find((l) => l.id === labelId);
+      if (label) {
+        setEditingColors((prev) => ({
+          ...prev,
+          [labelId]: label.color || "#2563eb",
+        }));
+      }
     }
   };
 

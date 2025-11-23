@@ -67,6 +67,8 @@ export default function CommoditiesPage() {
       if (response.ok) {
         const data = await response.json();
         setCommodities(data || []);
+      } else {
+        toast.error("Failed to fetch commodities");
       }
     } catch (error) {
       console.error("Error fetching commodities:", error);
