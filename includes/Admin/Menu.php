@@ -68,10 +68,10 @@ class Menu {
 			),
 			array(
 				'parent_slug' => $this->parent_slug,
-				'page_title'  => __( 'Countries', 'aer-chart-plugin' ),
-				'menu_title'  => __( 'Countries', 'aer-chart-plugin' ),
+				'page_title'  => __( 'Basket Prices', 'aer-chart-plugin' ),
+				'menu_title'  => __( 'Basket Prices', 'aer-chart-plugin' ),
 				'capability'  => 'manage_options',
-				'menu_slug'   => $plugin_url . '/#/countries',
+				'menu_slug'   => $plugin_url . '/#/basket-prices',
 				'function'    => null, // Uses the same callback function as parent menu.
 			),
 			array(
@@ -84,10 +84,10 @@ class Menu {
 			),
 			array(
 				'parent_slug' => $this->parent_slug,
-				'page_title'  => __( 'Basket Prices', 'aer-chart-plugin' ),
-				'menu_title'  => __( 'Basket Prices', 'aer-chart-plugin' ),
+				'page_title'  => __( 'Countries', 'aer-chart-plugin' ),
+				'menu_title'  => __( 'Countries', 'aer-chart-plugin' ),
 				'capability'  => 'manage_options',
-				'menu_slug'   => $plugin_url . '/#/basket-prices',
+				'menu_slug'   => $plugin_url . '/#/countries',
 				'function'    => null, // Uses the same callback function as parent menu.
 			),
 			// array(

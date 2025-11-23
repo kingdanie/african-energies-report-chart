@@ -391,13 +391,13 @@ export default function BasketPricesPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Country</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>{getLabelName("label_1")}</TableHead>
-                  <TableHead>{getLabelName("label_2")}</TableHead>
-                  <TableHead>{getLabelName("label_3")}</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="bg-primary">
+                  <TableHead className="text-white">Country</TableHead>
+                  <TableHead className="text-white">Date</TableHead>
+                  <TableHead className="text-white">{getLabelName("label_1")}</TableHead>
+                  <TableHead className="text-white">{getLabelName("label_2")}</TableHead>
+                  <TableHead className="text-white">{getLabelName("label_3")}</TableHead>
+                  <TableHead className="text-right text-white">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

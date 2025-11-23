@@ -267,13 +267,13 @@ export default function CommoditiesPage() {
             <div className="text-center py-8">Loading...</div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-primary">
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Abbreviation</TableHead>
-                  <TableHead>Previous Price</TableHead>
-                  <TableHead>Current Price</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-white">Name</TableHead>
+                  <TableHead className="text-white">Abbreviation</TableHead>
+                  <TableHead className="text-white">Previous Price</TableHead>
+                  <TableHead className="text-white">Current Price</TableHead>
+                  <TableHead className="text-right text-white">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

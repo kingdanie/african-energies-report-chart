@@ -62,7 +62,7 @@ export default function CountriesPage() {
   const fetchCountries = async () => {
     try {
       const response = await fetch(
-        `${apiUrl}${routePrefix}/countries/get?orderby=display_order&order=asc`
+        `${apiUrl}${routePrefix}/countries/get?active_only=false&orderby=display_order&order=asc`
       );
       if (response.ok) {
         const data = await response.json();
@@ -185,6 +185,7 @@ export default function CountriesPage() {
                 <Label htmlFor="name">Name *</Label>
                 <Input
                   id="name"
+                  placeholder="e.g., Nigeria"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
@@ -256,13 +257,13 @@ export default function CountriesPage() {
             <div className="text-center py-8">Loading...</div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-primary">
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Display Order</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-white">Name</TableHead>
+                  <TableHead className="text-white">Code</TableHead>
+                  <TableHead className="text-white">Display Order</TableHead>
+                  <TableHead className="text-white">Status</TableHead>
+                  <TableHead className="text-right text-white">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

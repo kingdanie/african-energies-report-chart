@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { Bar, BarChart, XAxis, YAxis } from "recharts";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import UpTrend from "./UpTrend";
 import DownTrend from "./DownTrend";
 
@@ -21,7 +28,7 @@ interface Commodity {
   curPrice: number;
 }
 
-export default function Commodities() {
+export default function CommoditiesWithBarChart() {
   const [commodities, setCommodities] = useState<Commodity[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -105,14 +112,16 @@ export default function Commodities() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
       {commodities.map((commodity, index) => {
         const trend = calculateTrend(commodity.prevPrice, commodity.curPrice);
+        const chartData = generateChartData(commodity);
+        const color = getCommodityColor(index);
 
         return (
-          <Card key={commodity.id} className="w-full bg-[##FDFDFD] rounded-none shadow-none border border-border">
-            <CardHeader className="space-y-0">
-              <CardTitle className="flex items-baseline gap-2">
+          <Card key={commodity.id} className="w-full grid grid-cols-3 items-center gap-2 bg-[##FDFDFD] rounded-none shadow-none border border-border">
+            <CardHeader className="space-y-0 col-span-2">
+              <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-xl font-bold tabular-nums">
                   {formatPrice(commodity.curPrice)}
                 </span>
@@ -120,12 +129,45 @@ export default function Commodities() {
                   {trend === "up" && <UpTrend className="h-4 w-4" />}
                   {trend === "down" && <DownTrend className="h-4 w-4" />}
                 </div>
+              </div>
+              <CardTitle className="text-sm font-normal text-muted-foreground">
+                {commodity.name}
               </CardTitle>
+
             </CardHeader>
             <CardContent>
-               <div className="text-sm font-normal text-muted-foreground">
-                {commodity.name}
-              </div>
+              <ChartContainer
+                config={{
+                  value: {
+                    label: "Price",
+                    color: color,
+                  },
+                }}
+                className="h-[30px] w-full"
+              >
+                <BarChart
+                  data={chartData}
+                  margin={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                >
+                  <XAxis dataKey="day" hide />
+                  <YAxis hide domain={["dataMin - 5", "dataMax + 5"]} />
+                  <Bar
+                    dataKey="value"
+                    fill={color}
+                    radius={4}
+                    fillOpacity={0.6}
+                  />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        hideLabel
+                        formatter={(value: any) => formatPrice(value)}
+                      />
+                    }
+                    cursor={false}
+                  />
+                </BarChart>
+              </ChartContainer>
             </CardContent>
           </Card>
         );

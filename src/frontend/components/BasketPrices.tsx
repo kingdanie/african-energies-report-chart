@@ -394,8 +394,8 @@ export default function BasketPrices() {
     countries.find((c) => c.id === selectedCountry)?.name || "";
 
   return (
-    <div className="w-full p-6 space-y-6">
-      <Card>
+    <div className="w-full space-y-6">
+      <Card className="rounded-none  shadow-none border border-border">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
