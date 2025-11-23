@@ -58,26 +58,6 @@ export default function Commodities() {
     return "text-gray-500";
   };
 
-  const generateChartData = (commodity: Commodity) => {
-    // Generate last 7 days data for mini chart
-    const data = [];
-    const days = 7;
-    const diff = (Number(commodity.curPrice) - Number(commodity.prevPrice)) / days;
-    
-    for (let i = 0; i < days; i++) {
-      data.push({
-        day: i,
-        value: Number(commodity.prevPrice) + diff * i,
-      });
-    }
-    return data;
-  };
-
-  const getCommodityColor = (index: number) => {
-    const colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"];
-    return colors[index % colors.length];
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -114,7 +94,7 @@ export default function Commodities() {
             </CardHeader>
             <CardContent>
                <div className="text-sm font-normal text-muted-foreground">
-                {commodity.name}
+                {commodity.name}  ({commodity.abbreviation})
               </div>
             </CardContent>
           </Card>
