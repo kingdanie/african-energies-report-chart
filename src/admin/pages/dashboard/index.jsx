@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, lazy, Suspense } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,8 +26,8 @@ import { CalendarDateRangePicker } from "@/components/dashboard/date-range-picke
 import { Overview } from "@/components/dashboard/overview";
 import { Search } from "@/components/dashboard/search";
 import { Globe, Package, TrendingUp, Activity, ChevronDown, Check, Info, Code, BookOpen } from "lucide-react";
-import Highcharts from "highcharts/highstock";
-import HighchartsReact from "highcharts-react-official";
+// Lazy load Highcharts to reduce initial bundle size
+const HighchartsReact = lazy(() => import("highcharts-react-official"));
 import { format, subMonths, subYears, startOfYear, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -266,6 +266,7 @@ function DashboardChart({ apiUrl, routePrefix }) {
   const [timeRange, setTimeRange] = useState("all");
   const [chartReady, setChartReady] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [Highcharts, setHighcharts] = useState(null);
   const chartRef = useRef(null);
 
   // Fetch countries using TanStack Query
@@ -323,19 +324,20 @@ function DashboardChart({ apiUrl, routePrefix }) {
     filterByTimeRange();
   }, [basketPrices, timeRange]);
 
+  // Dynamically load Highcharts
   useEffect(() => {
-    // Ensure Highcharts is loaded
-    if (typeof Highcharts !== "undefined") {
+    import("highcharts/highstock").then((module) => {
+      setHighcharts(module.default);
       setChartReady(true);
-    }
-  }, [basketPrices, filteredPrices]);
+    });
+  }, []);
 
   // Reset chart ready state when country changes
   useEffect(() => {
-    if (selectedCountry) {
-      setChartReady(false);
+    if (selectedCountry && Highcharts) {
+      setChartReady(true);
     }
-  }, [selectedCountry]);
+  }, [selectedCountry, Highcharts]);
 
   const loading = basketPricesLoading;
 
@@ -636,16 +638,18 @@ function DashboardChart({ apiUrl, routePrefix }) {
           <div className="flex items-center justify-center h-[450px]">
             <div className="text-muted-foreground">Loading chart data...</div>
           </div>
-        ) : chartReady && typeof Highcharts !== "undefined" ? (
+        ) : chartReady && Highcharts ? (
           <>
             {chartData.label1.length > 0 ? (
-              <HighchartsReact
-                key={`chart-${selectedCountry}-${basketPrices.length}`}
-                ref={chartRef}
-                highcharts={Highcharts}
-                options={chartOptions}
-                constructorType="stockChart"
-              />
+              <Suspense fallback={<div className="flex items-center justify-center h-[450px]"><div className="text-muted-foreground">Loading chart...</div></div>}>
+                <HighchartsReact
+                  key={`chart-${selectedCountry}-${basketPrices.length}`}
+                  ref={chartRef}
+                  highcharts={Highcharts}
+                  options={chartOptions}
+                  constructorType="stockChart"
+                />
+              </Suspense>
             ) : (
               <div className="flex items-center justify-center h-[450px]">
                 <div className="text-muted-foreground">

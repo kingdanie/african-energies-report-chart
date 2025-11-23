@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -8,9 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Highcharts from "highcharts/highstock";
-import HighchartsReact from "highcharts-react-official";
 import { format, subMonths, subYears, startOfYear, parseISO } from "date-fns";
+
+// Lazy load Highcharts to reduce initial bundle size
+const HighchartsReact = lazy(() => import("highcharts-react-official"));
 
 // Declare window type for WordPress data
 declare global {
@@ -56,7 +57,8 @@ export default function BasketPrices() {
   const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>("all");
   const [chartReady, setChartReady] = useState(false);
-  const chartRef = useRef<HighchartsReact.RefObject>(null);
+  const [Highcharts, setHighcharts] = useState<any>(null);
+  const chartRef = useRef<any>(null);
 
   // Fetch countries using TanStack Query
   const { data: countries = [], isLoading: countriesLoading } = useQuery({
@@ -144,26 +146,20 @@ export default function BasketPrices() {
     });
   }, [basketPrices, timeRange]);
 
+  // Dynamically load Highcharts
   useEffect(() => {
-    // Ensure Highcharts is loaded before rendering
-    if (typeof Highcharts !== "undefined") {
+    import("highcharts/highstock").then((module) => {
+      setHighcharts(module.default);
       setChartReady(true);
-    }
+    });
   }, []);
 
   // Reset chart ready state when country changes
   useEffect(() => {
-    if (selectedCountry) {
-      setChartReady(false);
-      // Set chart ready after a brief delay to ensure data is loaded
-      const timer = setTimeout(() => {
-        if (typeof Highcharts !== "undefined") {
-          setChartReady(true);
-        }
-      }, 100);
-      return () => clearTimeout(timer);
+    if (selectedCountry && Highcharts) {
+      setChartReady(true);
     }
-  }, [selectedCountry]);
+  }, [selectedCountry, Highcharts]);
 
   const formatFullDate = (dateString: string) => {
     try {
@@ -437,16 +433,18 @@ export default function BasketPrices() {
             <div className="flex items-center justify-center h-[450px]">
               <div className="text-muted-foreground">Loading chart data...</div>
             </div>
-          ) : chartReady && typeof Highcharts !== "undefined" ? (
+          ) : chartReady && Highcharts ? (
             <>
               {chartData.label1.length > 0 ? (
-                <HighchartsReact
-                  key={`chart-${selectedCountry}-${basketPrices.length}`}
-                  ref={chartRef}
-                  highcharts={Highcharts}
-                  options={chartOptions}
-                  constructorType="stockChart"
-                />
+                <Suspense fallback={<div className="flex items-center justify-center h-[450px]"><div className="text-muted-foreground">Loading chart...</div></div>}>
+                  <HighchartsReact
+                    key={`chart-${selectedCountry}-${basketPrices.length}`}
+                    ref={chartRef}
+                    highcharts={Highcharts}
+                    options={chartOptions}
+                    constructorType="stockChart"
+                  />
+                </Suspense>
               ) : (
                 <div className="flex items-center justify-center h-[450px]">
                   <div className="text-muted-foreground">
