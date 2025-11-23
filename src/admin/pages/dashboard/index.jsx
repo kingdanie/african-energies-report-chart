@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -270,6 +270,8 @@ function DashboardChart({ apiUrl, routePrefix }) {
 
   useEffect(() => {
     if (selectedCountry) {
+      setChartReady(false); // Reset chart ready state when country changes
+      setBasketPrices([]); // Clear previous country's data immediately
       fetchBasketPrices();
     }
   }, [selectedCountry]);
@@ -279,10 +281,11 @@ function DashboardChart({ apiUrl, routePrefix }) {
   }, [basketPrices, timeRange]);
 
   useEffect(() => {
-    if (typeof Highcharts !== "undefined" && filteredPrices.length > 0) {
+    // Ensure Highcharts is loaded
+    if (typeof Highcharts !== "undefined") {
       setChartReady(true);
     }
-  }, [filteredPrices]);
+  }, [basketPrices, filteredPrices]);
 
   const fetchCountries = async () => {
     try {
@@ -418,7 +421,7 @@ function DashboardChart({ apiUrl, routePrefix }) {
 
   const allChartData = prepareChartData(basketPrices);
 
-  const chartOptions = {
+  const chartOptions = useMemo(() => ({
     chart: {
       type: "line",
       height: 450,
@@ -534,19 +537,34 @@ function DashboardChart({ apiUrl, routePrefix }) {
     scrollbar: {
       enabled: false,
     },
-  };
+  }), [chartData, allChartData, labels]);
 
   useEffect(() => {
     if (chartRef.current && chartRef.current.chart && chartReady) {
       const chart = chartRef.current.chart;
       const series = chart.series;
-      if (series && series.length >= 3 && chartData.label1.length > 0) {
+      
+      // Update main series - always update, even if data is empty (to clear previous country's data)
+      if (series && series.length >= 3) {
         series[0].setData(chartData.label1, true);
         series[1].setData(chartData.label2, true);
         series[2].setData(chartData.label3, true);
+        
+        // Update navigator series - navigator is a property of StockChart
+        try {
+          const navigator = chart.navigator;
+          if (navigator && navigator.series && navigator.series.length > 0) {
+            navigator.series[0].setData(allChartData.label1, true);
+          }
+        } catch (e) {
+          // Navigator might not be available, ignore
+        }
+        
+        // Redraw the chart to ensure updates are visible
+        chart.redraw();
       }
     }
-  }, [chartData, timeRange, chartReady, selectedCountry]);
+  }, [chartData, allChartData, timeRange, chartReady, selectedCountry, basketPrices]);
 
   const selectedCountryName =
     countries.find((c) => c.id === selectedCountry)?.name || "";
@@ -612,24 +630,31 @@ function DashboardChart({ apiUrl, routePrefix }) {
         </div>
       </CardHeader>
       <CardContent>
-        {chartReady && chartData.label1.length > 0 && typeof Highcharts !== "undefined" && (
-          <HighchartsReact
-            ref={chartRef}
-            highcharts={Highcharts}
-            options={chartOptions}
-            constructorType="stockChart"
-          />
-        )}
-        {!loading && chartData.label1.length === 0 && (
-          <div className="flex items-center justify-center h-[450px]">
-            <div className="text-muted-foreground">
-              No basket price data available for this country.
-            </div>
-          </div>
-        )}
-        {loading && (
+        {loading ? (
           <div className="flex items-center justify-center h-[450px]">
             <div className="text-muted-foreground">Loading chart data...</div>
+          </div>
+        ) : chartReady && typeof Highcharts !== "undefined" ? (
+          <>
+            {chartData.label1.length > 0 ? (
+              <HighchartsReact
+                key={`chart-${selectedCountry}-${basketPrices.length}`}
+                ref={chartRef}
+                highcharts={Highcharts}
+                options={chartOptions}
+                constructorType="stockChart"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-[450px]">
+                <div className="text-muted-foreground">
+                  No basket price data available for this country.
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex items-center justify-center h-[450px]">
+            <div className="text-muted-foreground">Initializing chart...</div>
           </div>
         )}
       </CardContent>
