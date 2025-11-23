@@ -329,7 +329,7 @@ export default function BasketPrices() {
       height: 100,
       xAxis: {
         labels: {
-          enabled: false,
+          enabled: true,
         },
       },
       series: {
@@ -346,7 +346,7 @@ export default function BasketPrices() {
       maskFill: "rgba(37, 99, 235, 0.1)",
     },
     rangeSelector: {
-      enabled: false,
+      enabled: true,
     },
     scrollbar: {
       enabled: false,
@@ -400,6 +400,7 @@ export default function BasketPrices() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <CardTitle>Basket Prices - {selectedCountryName}</CardTitle>
+            </div>
               <Select
                 value={selectedCountry.toString()}
                 onValueChange={(value) => setSelectedCountry(parseInt(value))}
@@ -415,51 +416,7 @@ export default function BasketPrices() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={timeRange === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("all")}
-              >
-                All
-              </Button>
-              <Button
-                variant={timeRange === "1y" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("1y")}
-              >
-                1y
-              </Button>
-              <Button
-                variant={timeRange === "ytd" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("ytd")}
-              >
-                YTD
-              </Button>
-              <Button
-                variant={timeRange === "6m" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("6m")}
-              >
-                6m
-              </Button>
-              <Button
-                variant={timeRange === "3m" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("3m")}
-              >
-                3m
-              </Button>
-              <Button
-                variant={timeRange === "1m" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("1m")}
-              >
-                1m
-              </Button>
-            </div>
+           
           </div>
           {chartData.label1.length > 0 && (
             <div className="text-sm text-muted-foreground">
