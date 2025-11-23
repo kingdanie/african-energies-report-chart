@@ -60,13 +60,15 @@ export default function CommoditiesPage() {
       const wpData = window.wordpressPluginBoilerplate || {};
       const apiUrl = wpData.apiUrl;
       const routePrefix = wpData.routePrefix;
-      // const routePrefix = wpData.route_prefix || "wordpress-plugin-boilerplate/v1";
+      // const routePrefix = wpData.route_prefix || "african-energy-reports-plugin/v1";
       const response = await fetch(
         `${apiUrl}${routePrefix}/commodities/get`
       );
       if (response.ok) {
         const data = await response.json();
         setCommodities(data || []);
+      } else {
+        toast.error("Failed to fetch commodities");
       }
     } catch (error) {
       console.error("Error fetching commodities:", error);
@@ -118,7 +120,7 @@ export default function CommoditiesPage() {
     try {
       const wpData = window.wordpressPluginBoilerplateAdmin || {};
       const apiUrl = wpData.apiUrl || "";
-      const routePrefix =  "wordpress-plugin-boilerplate/v1";
+      const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
       const response = await fetch(
         `${apiUrl}${routePrefix}/commodities/delete`,
         {
@@ -267,13 +269,13 @@ export default function CommoditiesPage() {
             <div className="text-center py-8">Loading...</div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-primary">
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Abbreviation</TableHead>
-                  <TableHead>Previous Price</TableHead>
-                  <TableHead>Current Price</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-white">Name</TableHead>
+                  <TableHead className="text-white">Abbreviation</TableHead>
+                  <TableHead className="text-white">Previous Price</TableHead>
+                  <TableHead className="text-white">Current Price</TableHead>
+                  <TableHead className="text-right text-white">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

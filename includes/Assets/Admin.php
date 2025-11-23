@@ -40,7 +40,7 @@ class Admin {
 	 * @var array
 	 */
 	private $allowed_screens = array(
-		'toplevel_page_wordpress-plugin-boilerplate',
+		'toplevel_page_african-energy-reports-plugin',
 	);
 
 	/**

@@ -20,7 +20,7 @@ class Menu {
 	 *
 	 * @var string
 	 */
-	private $parent_slug = 'wordpress-plugin-boilerplate';
+	private $parent_slug = 'african-energy-reports-plugin';
 
 	/**
 	 * Initializes the admin menu.
@@ -40,12 +40,12 @@ class Menu {
 	public function menu() {
 
 		add_menu_page(
-			__( 'MyPlugin', 'aer-chart-plugin' ),
-			__( 'MyPlugin', 'aer-chart-plugin' ),
+			__( 'AER Charts', 'aer-chart-plugin' ),
+			__( 'AER Charts', 'aer-chart-plugin' ),
 			'manage_options',
 			$this->parent_slug,
 			array( $this, 'admin_page' ),
-			'dashicons-email',
+			'dashicons-chart-line',
 			3
 		);
 
@@ -68,14 +68,6 @@ class Menu {
 			),
 			array(
 				'parent_slug' => $this->parent_slug,
-				'page_title'  => __( 'Commodities', 'aer-chart-plugin' ),
-				'menu_title'  => __( 'Commodities', 'aer-chart-plugin' ),
-				'capability'  => 'manage_options',
-				'menu_slug'   => $plugin_url . '/#/commodities',
-				'function'    => null, // Uses the same callback function as parent menu.
-			),
-			array(
-				'parent_slug' => $this->parent_slug,
 				'page_title'  => __( 'Basket Prices', 'aer-chart-plugin' ),
 				'menu_title'  => __( 'Basket Prices', 'aer-chart-plugin' ),
 				'capability'  => 'manage_options',
@@ -84,29 +76,19 @@ class Menu {
 			),
 			array(
 				'parent_slug' => $this->parent_slug,
-				'page_title'  => __( 'Inbox', 'aer-chart-plugin' ),
-				'menu_title'  => __( 'Inbox', 'aer-chart-plugin' ),
+				'page_title'  => __( 'Commodities', 'aer-chart-plugin' ),
+				'menu_title'  => __( 'Commodities', 'aer-chart-plugin' ),
 				'capability'  => 'manage_options',
-				'menu_slug'   => $plugin_url . '/#/inbox',
-				'function'    => null, // Uses the same callback function as parent menu.
+				'menu_slug'   => $plugin_url . '/#/commodities',
+				'function'    => null, 
 			),
-
 			array(
 				'parent_slug' => $this->parent_slug,
-				'page_title'  => __( 'Chart', 'aer-chart-plugin' ),
-				'menu_title'  => __( 'Chart', 'aer-chart-plugin' ),
+				'page_title'  => __( 'Countries', 'aer-chart-plugin' ),
+				'menu_title'  => __( 'Countries', 'aer-chart-plugin' ),
 				'capability'  => 'manage_options',
-				'menu_slug'   => $plugin_url . '/#/charts',
-				'function'    => null, // Uses the same callback function as parent menu.
-			),
-
-			array(
-				'parent_slug' => $this->parent_slug,
-				'page_title'  => __( 'Settings', 'aer-chart-plugin' ),
-				'menu_title'  => __( 'Settings', 'aer-chart-plugin' ),
-				'capability'  => 'manage_options',
-				'menu_slug'   => $plugin_url . '/#/settings',
-				'function'    => null, // Uses the same callback function as parent menu.
+				'menu_slug'   => $plugin_url . '/#/countries',
+				'function'    => null, 
 			),
 		);
 

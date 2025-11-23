@@ -12,7 +12,7 @@ use Prappo\WpEloquent\Database\Capsule\Manager as Capsule;
 /**
  * Class BasketPrices
  *
- * Represents the seeder for the 'accounts' table.
+ * Represents the seeder for the 'basketprices' table.
  *
  * @package AERChartPlugin\Database\Seeders
  * @since 1.0.0

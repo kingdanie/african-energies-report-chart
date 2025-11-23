@@ -2,10 +2,11 @@
 
 namespace AERChartPlugin\Core;
 
-use AERChartPlugin\Database\Migrations\Accounts;
 use AERChartPlugin\Database\Migrations\Commodities;
+use AERChartPlugin\Database\Migrations\Countries;
+use AERChartPlugin\Database\Migrations\BasketPriceLabels;
 use AERChartPlugin\Database\Migrations\BasketPrices;
-use AERChartPlugin\Database\Seeders\Accounts as SeedersAccounts;
+use AERChartPlugin\Database\Seeders\Countries as SeedersCountries;
 use AERChartPlugin\Traits\Base;
 
 /**
@@ -48,9 +49,10 @@ class Install {
 	 * @return void
 	 */
 	private function install_tables() {
-		Accounts::up();
 		Commodities::up();
-		BasketPrices::up();
+		Countries::up();
+		BasketPriceLabels::up();
+		BasketPrices::up(); // Run after Countries and Labels
 	}
 
 	/**
@@ -60,6 +62,6 @@ class Install {
 	 */
 	private function insert_data() {
 		// Insert data to the tables.
-		SeedersAccounts::run();
+		SeedersCountries::run(); // Seed Nigeria as default country
 	}
 }

@@ -1,9 +1,17 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, lazy, Suspense } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Highcharts from "highcharts/highstock";
-import HighchartsReact from "highcharts-react-official";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format, subMonths, subYears, startOfYear, parseISO } from "date-fns";
+
+// Lazy load Highcharts to reduce initial bundle size
+const HighchartsReact = lazy(() => import("highcharts-react-official"));
 
 // Declare window type for WordPress data
 declare global {
@@ -15,60 +23,98 @@ declare global {
   }
 }
 
+interface Country {
+  id: number;
+  name: string;
+  code?: string;
+  is_active: boolean;
+}
+
+interface BasketPriceLabel {
+  id: number;
+  label_key: string;
+  name: string;
+  color?: string;
+  display_order: number;
+}
+
 interface BasketPrice {
   id: number;
+  country_id: number;
   day: string;
-  setScore: number;
+  value_label_1: number;
+  value_label_2: number;
+  value_label_3: number;
 }
 
 type TimeRange = "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
 
 export default function BasketPrices() {
-  const [basketPrices, setBasketPrices] = useState<BasketPrice[]>([]);
-  const [filteredPrices, setFilteredPrices] = useState<BasketPrice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const wpData = window.wordpressPluginBoilerplateFrontend || {};
+  const apiUrl = wpData.apiUrl || "";
+  const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
+
+  const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>("all");
   const [chartReady, setChartReady] = useState(false);
-  const chartRef = useRef<HighchartsReact.RefObject>(null);
+  const [Highcharts, setHighcharts] = useState<any>(null);
+  const chartRef = useRef<any>(null);
 
-  useEffect(() => {
-    fetchBasketPrices();
-  }, []);
-
-  useEffect(() => {
-    filterByTimeRange();
-  }, [basketPrices, timeRange]);
-
-  useEffect(() => {
-    // Ensure Highcharts is loaded before rendering
-    if (typeof Highcharts !== "undefined" && basketPrices.length > 0) {
-      setChartReady(true);
-    }
-  }, [basketPrices]);
-
-  const fetchBasketPrices = async () => {
-    try {
-      const wpData = window.wordpressPluginBoilerplateFrontend || {};
-      const apiUrl = wpData.apiUrl || "";
-      const routePrefix = wpData.routePrefix || "wordpress-plugin-boilerplate/v1";
+  // Fetch countries using TanStack Query
+  const { data: countries = [], isLoading: countriesLoading } = useQuery({
+    queryKey: ["countries", "active"],
+    queryFn: async () => {
       const response = await fetch(
-        `${apiUrl}${routePrefix}/basket-prices/get?orderby=day&order=asc`
+        `${apiUrl}${routePrefix}/countries/get?active_only=true&orderby=display_order&order=asc`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setBasketPrices(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching basket prices:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (!response.ok) throw new Error("Failed to fetch countries");
+      const data = await response.json();
+      return data || [];
+    },
+  });
 
-  const filterByTimeRange = () => {
-    if (basketPrices.length === 0) {
-      setFilteredPrices([]);
-      return;
+  // Fetch labels using TanStack Query
+  const { data: labels = [] } = useQuery({
+    queryKey: ["basket-price-labels"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${apiUrl}${routePrefix}/basket-price-labels/get`
+      );
+      if (!response.ok) throw new Error("Failed to fetch labels");
+      const data = await response.json();
+      return data || [];
+    },
+  });
+
+  // Fetch basket prices using TanStack Query
+  const {
+    data: basketPrices = [],
+    isLoading: basketPricesLoading,
+  } = useQuery({
+    queryKey: ["basket-prices", selectedCountry],
+    queryFn: async () => {
+      if (!selectedCountry) return [];
+      const response = await fetch(
+        `${apiUrl}${routePrefix}/basket-prices/get?country_id=${selectedCountry}&orderby=day&order=asc`
+      );
+      if (!response.ok) throw new Error("Failed to fetch basket prices");
+      const data = await response.json();
+      return data || [];
+    },
+    enabled: !!selectedCountry, // Only fetch when country is selected
+  });
+
+  // Auto-select first country when countries are loaded
+  useEffect(() => {
+    if (countries && countries.length > 0 && !selectedCountry) {
+      setSelectedCountry(countries[0].id);
+    }
+  }, [countries, selectedCountry]);
+
+  // Compute filtered prices using useMemo to avoid infinite loops
+  const filteredPrices = useMemo(() => {
+    if (basketPrices.length === 0 || timeRange === "all") {
+      return basketPrices;
     }
 
     const now = new Date();
@@ -91,17 +137,29 @@ export default function BasketPrices() {
         startDate = subYears(now, 1);
         break;
       default:
-        setFilteredPrices(basketPrices);
-        return;
+        return basketPrices;
     }
 
-    const filtered = basketPrices.filter((price) => {
+    return basketPrices.filter((price) => {
       const priceDate = new Date(price.day);
       return priceDate >= startDate && priceDate <= now;
     });
+  }, [basketPrices, timeRange]);
 
-    setFilteredPrices(filtered);
-  };
+  // Dynamically load Highcharts
+  useEffect(() => {
+    import("highcharts/highstock").then((module) => {
+      setHighcharts(module.default);
+      setChartReady(true);
+    });
+  }, []);
+
+  // Reset chart ready state when country changes
+  useEffect(() => {
+    if (selectedCountry && Highcharts) {
+      setChartReady(true);
+    }
+  }, [selectedCountry, Highcharts]);
 
   const formatFullDate = (dateString: string) => {
     try {
@@ -120,16 +178,45 @@ export default function BasketPrices() {
     return `${formatFullDate(first.day)} → ${formatFullDate(last.day)}`;
   };
 
+  const getLabelInfo = (labelKey: string) => {
+    return labels.find((l) => l.label_key === labelKey) || {
+      name: labelKey,
+      color: "#2563eb",
+    };
+  };
+
   const prepareChartData = (prices: BasketPrice[]) => {
-    return prices.map((price) => [new Date(price.day).getTime(), Number(price.setScore)]);
+    const label1 = getLabelInfo("label_1");
+    const label2 = getLabelInfo("label_2");
+    const label3 = getLabelInfo("label_3");
+
+    return {
+      label1: prices.map((price) => [
+        new Date(price.day).getTime(),
+        Number(price.value_label_1),
+      ]),
+      label2: prices.map((price) => [
+        new Date(price.day).getTime(),
+        Number(price.value_label_2),
+      ]),
+      label3: prices.map((price) => [
+        new Date(price.day).getTime(),
+        Number(price.value_label_3),
+      ]),
+      label1Info: label1,
+      label2Info: label2,
+      label3Info: label3,
+    };
   };
 
   const chartData = prepareChartData(
     timeRange === "all" ? basketPrices : filteredPrices
   );
 
-  // Highcharts configuration
-  const chartOptions: Highcharts.Options = {
+  const allChartData = prepareChartData(basketPrices);
+
+  // Highcharts configuration - memoized to update when data changes
+  const chartOptions: Highcharts.Options = useMemo(() => ({
     chart: {
       type: "line",
       height: 450,
@@ -149,7 +236,7 @@ export default function BasketPrices() {
     },
     yAxis: {
       title: {
-        text: "OPEC Basket Price",
+        text: "Price",
         rotation: 0,
         align: "high",
         offset: 0,
@@ -160,23 +247,31 @@ export default function BasketPrices() {
         x: -10,
       },
       labels: {
-        format: "${value}",
+        format: "{value:,.0f}",
       },
       gridLineDashStyle: "Dash",
       gridLineColor: "#e5e7eb",
     },
     legend: {
-      enabled: false,
+      enabled: true,
+      align: "center",
+      verticalAlign: "bottom",
     },
     tooltip: {
       shared: true,
       useHTML: true,
       formatter: function () {
-        const point = this.points?.[0];
-        if (!point) return "";
-        const date = formatFullDate(new Date(point.x as number).toISOString());
-        const value = `$${(point.y as number).toFixed(2)}`;
-        return `<div><strong>${date}</strong><br/>OPEC Basket Price: ${value}</div>`;
+        if (!this.points || this.points.length === 0) return "";
+        const date = formatFullDate(
+          new Date(this.points[0].x as number).toISOString()
+        );
+        let tooltip = `<div><strong>${date}</strong><br/>`;
+        this.points.forEach((point: any) => {
+          const value = (point.y as number).toLocaleString();
+          tooltip += `${point.series.name}: ${value}<br/>`;
+        });
+        tooltip += "</div>";
+        return tooltip;
       },
     },
     plotOptions: {
@@ -191,16 +286,28 @@ export default function BasketPrices() {
           },
         },
         lineWidth: 2,
-        color: "#2563eb",
       },
     },
     series: [
       {
-        name: "OPEC Basket Price",
+        name: chartData.label1Info.name,
         type: "line",
-        data: chartData,
+        data: chartData.label1,
+        color: chartData.label1Info.color || "#10b981",
       },
-    ],
+      {
+        name: chartData.label2Info.name,
+        type: "line",
+        data: chartData.label2,
+        color: chartData.label2Info.color || "#3b82f6",
+      },
+      {
+        name: chartData.label3Info.name,
+        type: "line",
+        data: chartData.label3,
+        color: chartData.label3Info.color || "#6366f1",
+      },
+    ] as Highcharts.SeriesOptionsType[],
     credits: {
       enabled: false,
     },
@@ -209,14 +316,14 @@ export default function BasketPrices() {
       height: 100,
       xAxis: {
         labels: {
-          enabled: false,
+          enabled: true,
         },
       },
       series: {
         type: "line",
-        color: "#2563eb",
+        data: allChartData.label1,
+        color: chartData.label1Info.color || "#10b981",
         lineWidth: 1,
-        fillOpacity: 0.2,
       },
       handles: {
         backgroundColor: "#fff",
@@ -226,113 +333,130 @@ export default function BasketPrices() {
       maskFill: "rgba(37, 99, 235, 0.1)",
     },
     rangeSelector: {
-      enabled: false,
+      enabled: true,
     },
     scrollbar: {
       enabled: false,
     },
-  };
+  }), [chartData, allChartData, labels]);
 
   // Update chart when data changes
   useEffect(() => {
     if (chartRef.current && chartRef.current.chart && chartReady) {
       const chart = chartRef.current.chart;
-      const series = chart.series[0];
-      if (series && chartData.length > 0) {
-        series.setData(chartData, true);
+      const series = chart.series;
+      
+      // Update main series - always update, even if data is empty (to clear previous country's data)
+      if (series && series.length >= 3) {
+        series[0].setData(chartData.label1, true);
+        series[1].setData(chartData.label2, true);
+        series[2].setData(chartData.label3, true);
+        
+        // Update navigator series - navigator is a property of StockChart
+        try {
+          const navigator = (chart as any).navigator;
+          if (navigator && navigator.series && navigator.series.length > 0) {
+            navigator.series[0].setData(allChartData.label1, true);
+          }
+        } catch (e) {
+          // Navigator might not be available, ignore
+        }
+        
+        // Redraw the chart to ensure updates are visible
+        chart.redraw();
       }
     }
-  }, [chartData, timeRange, chartReady]);
+  }, [chartData, allChartData, timeRange, chartReady, selectedCountry, basketPrices]);
 
-  if (loading) {
+  const loading = countriesLoading || basketPricesLoading;
+
+  if (loading && !selectedCountry) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-muted-foreground">Loading basket prices...</div>
+        <div className="text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
-  if (basketPrices.length === 0) {
+  if (countries.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-muted-foreground">No basket price data available.</div>
+        <div className="text-muted-foreground">No countries available.</div>
       </div>
     );
   }
 
-  if (!chartReady || chartData.length === 0) {
+  if (!selectedCountry) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-muted-foreground">Preparing chart...</div>
+        <div className="text-muted-foreground">Please select a country.</div>
       </div>
     );
   }
+
+  const selectedCountryName =
+    countries.find((c) => c.id === selectedCountry)?.name || "";
 
   return (
-    <div className="w-full p-6 space-y-6">
-      <Card>
+    <div className="w-full space-y-6">
+      <Card className="rounded-none  shadow-none border border-border">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>OPEC Basket Price</CardTitle>
-            <div className="flex gap-2">
-              <Button
-                variant={timeRange === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("all")}
-              >
-                All
-              </Button>
-              <Button
-                variant={timeRange === "1y" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("1y")}
-              >
-                1y
-              </Button>
-              <Button
-                variant={timeRange === "ytd" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("ytd")}
-              >
-                YTD
-              </Button>
-              <Button
-                variant={timeRange === "6m" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("6m")}
-              >
-                6m
-              </Button>
-              <Button
-                variant={timeRange === "3m" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("3m")}
-              >
-                3m
-              </Button>
-              <Button
-                variant={timeRange === "1m" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("1m")}
-              >
-                1m
-              </Button>
+            <div className="flex items-center gap-4">
+              <CardTitle>Basket Prices - {selectedCountryName}</CardTitle>
             </div>
+              <Select
+                value={selectedCountry.toString()}
+                onValueChange={(value) => setSelectedCountry(parseInt(value))}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select Country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country.id} value={country.id.toString()}>
+                      {country.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+           
           </div>
-          {chartData.length > 0 && (
+          {chartData.label1.length > 0 && (
             <div className="text-sm text-muted-foreground">
               {getTimeframeLabel()}
             </div>
           )}
         </CardHeader>
         <CardContent>
-          {typeof Highcharts !== "undefined" && (
-            <HighchartsReact
-              ref={chartRef}
-              highcharts={Highcharts}
-              options={chartOptions}
-              constructorType="stockChart"
-            />
+          {loading ? (
+            <div className="flex items-center justify-center h-[450px]">
+              <div className="text-muted-foreground">Loading chart data...</div>
+            </div>
+          ) : chartReady && Highcharts ? (
+            <>
+              {chartData.label1.length > 0 ? (
+                <Suspense fallback={<div className="flex items-center justify-center h-[450px]"><div className="text-muted-foreground">Loading chart...</div></div>}>
+                  <HighchartsReact
+                    key={`chart-${selectedCountry}-${basketPrices.length}`}
+                    ref={chartRef}
+                    highcharts={Highcharts}
+                    options={chartOptions}
+                    constructorType="stockChart"
+                  />
+                </Suspense>
+              ) : (
+                <div className="flex items-center justify-center h-[450px]">
+                  <div className="text-muted-foreground">
+                    No basket price data available for this country.
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-[450px]">
+              <div className="text-muted-foreground">Initializing chart...</div>
+            </div>
           )}
         </CardContent>
       </Card>
