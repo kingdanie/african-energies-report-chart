@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,10 +61,8 @@ export default function CountriesPage() {
   const wpData = window.wordpressPluginBoilerplate || {};
   const apiUrl = wpData.apiUrl || "";
   const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
+  const queryClient = useQueryClient();
 
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [allCountries, setAllCountries] = useState<Country[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -75,103 +74,97 @@ export default function CountriesPage() {
     is_active: true,
   });
 
-  useEffect(() => {
-    fetchCountries();
-  }, []);
-
-  useEffect(() => {
-    filterCountries();
-  }, [statusFilter, allCountries]);
-
-  const fetchCountries = async () => {
-    try {
+  // Fetch all countries using TanStack Query
+  const { data: allCountries = [], isLoading: loading } = useQuery({
+    queryKey: ["countries", "all"],
+    queryFn: async () => {
       const response = await fetch(
         `${apiUrl}${routePrefix}/countries/get?active_only=false&orderby=display_order&order=asc`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setAllCountries(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching countries:", error);
-      toast.error("Failed to fetch countries");
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (!response.ok) throw new Error("Failed to fetch countries");
+      const data = await response.json();
+      return data || [];
+    },
+  });
 
-  const filterCountries = () => {
-    let filtered = [...allCountries];
-    
+  // Filter countries based on status filter
+  const countries = allCountries.filter((country: Country) => {
     if (statusFilter === "active") {
-      filtered = filtered.filter((country) => country.is_active === 1);
+      return country.is_active === 1 || country.is_active === true;
     } else if (statusFilter === "inactive") {
-      filtered = filtered.filter((country) => country.is_active === 0);
+      return country.is_active === 0 || country.is_active === false;
     }
-    // If "all", show all countries (no filtering)
-    
-    setCountries(filtered);
-  };
+    return true; // "all" - show all countries
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
+  // Create/Update mutation
+  const createUpdateMutation = useMutation({
+    mutationFn: async (data: Country & { id?: number }) => {
       const endpoint = editingCountry
         ? `${apiUrl}${routePrefix}/countries/update`
         : `${apiUrl}${routePrefix}/countries/create`;
-
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...formData,
-          id: editingCountry?.id,
-        }),
+        body: JSON.stringify(data),
       });
-
-      const result = await response.json();
-
+      if (!response.ok) throw new Error("Failed to save country");
+      return await response.json();
+    },
+    onSuccess: (result) => {
       if (result.status === "success") {
         toast.success(result.message);
         setIsDialogOpen(false);
         resetForm();
-        fetchCountries();
+        queryClient.invalidateQueries({ queryKey: ["countries"] });
       } else {
         toast.error(result.message);
       }
-    } catch (error) {
+    },
+    onError: () => {
       toast.error("Failed to save country");
-    }
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`${apiUrl}${routePrefix}/countries/delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+      if (!response.ok) throw new Error("Failed to delete country");
+      return await response.json();
+    },
+    onSuccess: (result) => {
+      if (result.status === "success") {
+        toast.success(result.message);
+        queryClient.invalidateQueries({ queryKey: ["countries"] });
+      } else {
+        toast.error(result.message);
+      }
+    },
+    onError: () => {
+      toast.error("Failed to delete country");
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    createUpdateMutation.mutate({
+      ...formData,
+      id: editingCountry?.id,
+    });
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this country?")) return;
-
-    try {
-      const response = await fetch(
-        `${apiUrl}${routePrefix}/countries/delete`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (result.status === "success") {
-        toast.success(result.message);
-        fetchCountries();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      toast.error("Failed to delete country");
-    }
+    deleteMutation.mutate(id);
   };
 
   const handleEdit = (country: Country) => {

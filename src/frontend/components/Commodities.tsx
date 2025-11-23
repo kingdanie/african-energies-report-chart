@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import UpTrend from "./UpTrend";
 import DownTrend from "./DownTrend";
@@ -22,31 +22,21 @@ interface Commodity {
 }
 
 export default function Commodities() {
-  const [commodities, setCommodities] = useState<Commodity[]>([]);
-  const [loading, setLoading] = useState(true);
+  const wpData = window.wordpressPluginBoilerplateFrontend || {};
+  const apiUrl = wpData.apiUrl || "";
+  const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
 
-  useEffect(() => {
-    fetchCommodities();
-  }, []);
-
-  const fetchCommodities = async () => {
-    try {
-      const wpData = window.wordpressPluginBoilerplateFrontend || {};
-      const apiUrl = wpData.apiUrl || "";
-      const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
+  const { data: commodities = [], isLoading: loading } = useQuery({
+    queryKey: ["commodities"],
+    queryFn: async () => {
       const response = await fetch(
         `${apiUrl}${routePrefix}/commodities/get`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setCommodities(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching commodities:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (!response.ok) throw new Error("Failed to fetch commodities");
+      const data = await response.json();
+      return data || [];
+    },
+  });
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-NG", {

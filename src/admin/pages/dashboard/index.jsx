@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -35,61 +35,65 @@ export default function DashboardPage() {
   const wpData = window.wordpressPluginBoilerplate || {};
   const apiUrl = wpData.apiUrl || "";
   const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
+  const queryClient = useQueryClient();
 
-  const [stats, setStats] = useState({
-    totalCountries: 0,
-    activeCountries: 0,
-    inactiveCountries: 0,
-    totalCommodities: 0,
-    totalBasketPrices: 0,
-    recentBasketPrices: [],
+  // Fetch countries using TanStack Query
+  const { data: countries = [], isLoading: countriesLoading } = useQuery({
+    queryKey: ["countries", "all"],
+    queryFn: async () => {
+      const response = await fetch(`${apiUrl}${routePrefix}/countries/get?active_only=false`);
+      if (!response.ok) throw new Error("Failed to fetch countries");
+      return await response.json();
+    },
   });
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboardStats();
-  }, []);
+  // Fetch commodities using TanStack Query
+  const { data: commodities = [], isLoading: commoditiesLoading } = useQuery({
+    queryKey: ["commodities"],
+    queryFn: async () => {
+      const response = await fetch(`${apiUrl}${routePrefix}/commodities/get`);
+      if (!response.ok) throw new Error("Failed to fetch commodities");
+      return await response.json();
+    },
+  });
 
-  const fetchDashboardStats = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch all data in parallel
-      const [countriesRes, commoditiesRes, basketPricesRes] = await Promise.all([
-        fetch(`${apiUrl}${routePrefix}/countries/get?active_only=false`),
-        fetch(`${apiUrl}${routePrefix}/commodities/get`),
-        fetch(`${apiUrl}${routePrefix}/basket-prices/get?limit=10&orderby=day&order=desc`),
-      ]);
+  // Fetch recent basket prices using TanStack Query
+  const { data: recentBasketPrices = [], isLoading: basketPricesLoading } = useQuery({
+    queryKey: ["basket-prices", "recent"],
+    queryFn: async () => {
+      const response = await fetch(`${apiUrl}${routePrefix}/basket-prices/get?limit=10&orderby=day&order=desc`);
+      if (!response.ok) throw new Error("Failed to fetch basket prices");
+      const data = await response.json();
+      return data.slice(0, 5) || [];
+    },
+  });
 
-      const countries = countriesRes.ok ? await countriesRes.json() : [];
-      const commodities = commoditiesRes.ok ? await commoditiesRes.json() : [];
-      const basketPrices = basketPricesRes.ok ? await basketPricesRes.json() : [];
+  // Fetch all basket prices for count
+  const { data: allBasketPrices = [] } = useQuery({
+    queryKey: ["basket-prices", "all"],
+    queryFn: async () => {
+      const response = await fetch(`${apiUrl}${routePrefix}/basket-prices/get`);
+      if (!response.ok) throw new Error("Failed to fetch all basket prices");
+      return await response.json();
+    },
+  });
 
-      // Calculate stats
-      const activeCountries = countries.filter((c) => {
-        return c.is_active === true || c.is_active === 1;
-      }).length;
-      const inactiveCountries = countries.length - activeCountries;
+  // Calculate stats from query data
+  const activeCountries = countries.filter((c) => {
+    return c.is_active === true || c.is_active === 1;
+  }).length;
+  const inactiveCountries = countries.length - activeCountries;
 
-      // Get total basket prices count (we might need a separate endpoint for this)
-      const allBasketPricesRes = await fetch(`${apiUrl}${routePrefix}/basket-prices/get`);
-      const allBasketPrices = allBasketPricesRes.ok ? await allBasketPricesRes.json() : [];
-
-      setStats({
-        totalCountries: countries.length,
-        activeCountries,
-        inactiveCountries,
-        totalCommodities: commodities.length || 0,
-        totalBasketPrices: allBasketPrices.length || 0,
-        recentBasketPrices: basketPrices.slice(0, 5) || [],
-      });
-    } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
-      toast.error("Failed to load dashboard statistics");
-    } finally {
-      setLoading(false);
-    }
+  const stats = {
+    totalCountries: countries.length,
+    activeCountries,
+    inactiveCountries,
+    totalCommodities: commodities.length || 0,
+    totalBasketPrices: allBasketPrices.length || 0,
+    recentBasketPrices: recentBasketPrices || [],
   };
+
+  const loading = countriesLoading || commoditiesLoading || basketPricesLoading;
 
   return (
     <>
@@ -106,7 +110,12 @@ export default function DashboardPage() {
             <h2 className="text-3xl dark:text-white font-bold tracking-tight">Dashboard</h2>
             <div className="flex items-center space-x-2">
               <CalendarDateRangePicker />
-              <Button onClick={fetchDashboardStats} variant="outline">
+              <Button 
+                onClick={() => {
+                  queryClient.invalidateQueries();
+                }} 
+                variant="outline"
+              >
                 Refresh
               </Button>
             </div>
@@ -252,29 +261,63 @@ export default function DashboardPage() {
 
 // Dashboard Chart Component (similar to frontend)
 function DashboardChart({ apiUrl, routePrefix }) {
-  const [basketPrices, setBasketPrices] = useState([]);
-  const [countries, setCountries] = useState([]);
-  const [labels, setLabels] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [filteredPrices, setFilteredPrices] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("all");
   const [chartReady, setChartReady] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const chartRef = useRef(null);
 
-  useEffect(() => {
-    fetchCountries();
-    fetchLabels();
-  }, []);
+  // Fetch countries using TanStack Query
+  const { data: countries = [] } = useQuery({
+    queryKey: ["countries", "active", "dashboard"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${apiUrl}${routePrefix}/countries/get?active_only=true&orderby=display_order&order=asc`
+      );
+      if (!response.ok) throw new Error("Failed to fetch countries");
+      const data = await response.json();
+      return data || [];
+    },
+  });
 
+  // Fetch labels using TanStack Query
+  const { data: labels = [] } = useQuery({
+    queryKey: ["basket-price-labels", "dashboard"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${apiUrl}${routePrefix}/basket-price-labels/get`
+      );
+      if (!response.ok) throw new Error("Failed to fetch labels");
+      const data = await response.json();
+      return data || [];
+    },
+  });
+
+  // Fetch basket prices using TanStack Query
+  const {
+    data: basketPrices = [],
+    isLoading: basketPricesLoading,
+  } = useQuery({
+    queryKey: ["basket-prices", selectedCountry, "dashboard"],
+    queryFn: async () => {
+      if (!selectedCountry) return [];
+      const response = await fetch(
+        `${apiUrl}${routePrefix}/basket-prices/get?country_id=${selectedCountry}&orderby=day&order=asc`
+      );
+      if (!response.ok) throw new Error("Failed to fetch basket prices");
+      const data = await response.json();
+      return data || [];
+    },
+    enabled: !!selectedCountry,
+  });
+
+  // Auto-select first country when countries are loaded
   useEffect(() => {
-    if (selectedCountry) {
-      setChartReady(false); // Reset chart ready state when country changes
-      setBasketPrices([]); // Clear previous country's data immediately
-      fetchBasketPrices();
+    if (countries && countries.length > 0 && !selectedCountry) {
+      setSelectedCountry(countries[0].id);
     }
-  }, [selectedCountry]);
+  }, [countries, selectedCountry]);
 
   useEffect(() => {
     filterByTimeRange();
@@ -287,55 +330,14 @@ function DashboardChart({ apiUrl, routePrefix }) {
     }
   }, [basketPrices, filteredPrices]);
 
-  const fetchCountries = async () => {
-    try {
-      const response = await fetch(
-        `${apiUrl}${routePrefix}/countries/get?active_only=true&orderby=display_order&order=asc`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setCountries(data || []);
-        if (data && data.length > 0 && !selectedCountry) {
-          setSelectedCountry(data[0].id);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching countries:", error);
+  // Reset chart ready state when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      setChartReady(false);
     }
-  };
+  }, [selectedCountry]);
 
-  const fetchLabels = async () => {
-    try {
-      const response = await fetch(
-        `${apiUrl}${routePrefix}/basket-price-labels/get`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setLabels(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching labels:", error);
-    }
-  };
-
-  const fetchBasketPrices = async () => {
-    if (!selectedCountry) return;
-
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `${apiUrl}${routePrefix}/basket-prices/get?country_id=${selectedCountry}&orderby=day&order=asc`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setBasketPrices(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching basket prices:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = basketPricesLoading;
 
   const filterByTimeRange = () => {
     if (basketPrices.length === 0) {

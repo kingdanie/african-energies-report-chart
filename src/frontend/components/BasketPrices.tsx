@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -53,95 +53,66 @@ export default function BasketPrices() {
   const apiUrl = wpData.apiUrl || "";
   const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
 
-  const [basketPrices, setBasketPrices] = useState<BasketPrice[]>([]);
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [labels, setLabels] = useState<BasketPriceLabel[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
-  const [filteredPrices, setFilteredPrices] = useState<BasketPrice[]>([]);
-  const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>("all");
   const [chartReady, setChartReady] = useState(false);
   const chartRef = useRef<HighchartsReact.RefObject>(null);
 
-  useEffect(() => {
-    fetchCountries();
-    fetchLabels();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCountry) {
-      setChartReady(false); // Reset chart ready state when country changes
-      setBasketPrices([]); // Clear previous country's data immediately
-      fetchBasketPrices();
-    }
-  }, [selectedCountry]);
-
-  useEffect(() => {
-    filterByTimeRange();
-  }, [basketPrices, timeRange]);
-
-  useEffect(() => {
-    // Ensure Highcharts is loaded before rendering
-    if (typeof Highcharts !== "undefined") {
-      setChartReady(true);
-    }
-  }, [basketPrices, filteredPrices]);
-
-  const fetchCountries = async () => {
-    try {
+  // Fetch countries using TanStack Query
+  const { data: countries = [], isLoading: countriesLoading } = useQuery({
+    queryKey: ["countries", "active"],
+    queryFn: async () => {
       const response = await fetch(
         `${apiUrl}${routePrefix}/countries/get?active_only=true&orderby=display_order&order=asc`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setCountries(data || []);
-        // Auto-select first country if available
-        if (data && data.length > 0 && !selectedCountry) {
-          setSelectedCountry(data[0].id);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching countries:", error);
-    }
-  };
+      if (!response.ok) throw new Error("Failed to fetch countries");
+      const data = await response.json();
+      return data || [];
+    },
+  });
 
-  const fetchLabels = async () => {
-    try {
+  // Fetch labels using TanStack Query
+  const { data: labels = [] } = useQuery({
+    queryKey: ["basket-price-labels"],
+    queryFn: async () => {
       const response = await fetch(
         `${apiUrl}${routePrefix}/basket-price-labels/get`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setLabels(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching labels:", error);
-    }
-  };
+      if (!response.ok) throw new Error("Failed to fetch labels");
+      const data = await response.json();
+      return data || [];
+    },
+  });
 
-  const fetchBasketPrices = async () => {
-    if (!selectedCountry) return;
-
-    try {
-      setLoading(true);
+  // Fetch basket prices using TanStack Query
+  const {
+    data: basketPrices = [],
+    isLoading: basketPricesLoading,
+  } = useQuery({
+    queryKey: ["basket-prices", selectedCountry],
+    queryFn: async () => {
+      if (!selectedCountry) return [];
       const response = await fetch(
         `${apiUrl}${routePrefix}/basket-prices/get?country_id=${selectedCountry}&orderby=day&order=asc`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setBasketPrices(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching basket prices:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (!response.ok) throw new Error("Failed to fetch basket prices");
+      const data = await response.json();
+      return data || [];
+    },
+    enabled: !!selectedCountry, // Only fetch when country is selected
+  });
 
-  const filterByTimeRange = () => {
-    if (basketPrices.length === 0) {
-      setFilteredPrices([]);
-      return;
+  // Auto-select first country when countries are loaded
+  useEffect(() => {
+    if (countries && countries.length > 0 && !selectedCountry) {
+      setSelectedCountry(countries[0].id);
+    }
+  }, [countries, selectedCountry]);
+
+  // Compute filtered prices using useMemo to avoid infinite loops
+  const filteredPrices = useMemo(() => {
+    if (basketPrices.length === 0 || timeRange === "all") {
+      return basketPrices;
     }
 
     const now = new Date();
@@ -164,17 +135,35 @@ export default function BasketPrices() {
         startDate = subYears(now, 1);
         break;
       default:
-        setFilteredPrices(basketPrices);
-        return;
+        return basketPrices;
     }
 
-    const filtered = basketPrices.filter((price) => {
+    return basketPrices.filter((price) => {
       const priceDate = new Date(price.day);
       return priceDate >= startDate && priceDate <= now;
     });
+  }, [basketPrices, timeRange]);
 
-    setFilteredPrices(filtered);
-  };
+  useEffect(() => {
+    // Ensure Highcharts is loaded before rendering
+    if (typeof Highcharts !== "undefined") {
+      setChartReady(true);
+    }
+  }, []);
+
+  // Reset chart ready state when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      setChartReady(false);
+      // Set chart ready after a brief delay to ensure data is loaded
+      const timer = setTimeout(() => {
+        if (typeof Highcharts !== "undefined") {
+          setChartReady(true);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedCountry]);
 
   const formatFullDate = (dateString: string) => {
     try {
@@ -382,6 +371,8 @@ export default function BasketPrices() {
       }
     }
   }, [chartData, allChartData, timeRange, chartReady, selectedCountry, basketPrices]);
+
+  const loading = countriesLoading || basketPricesLoading;
 
   if (loading && !selectedCountry) {
     return (
