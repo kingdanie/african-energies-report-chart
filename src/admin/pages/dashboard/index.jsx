@@ -25,7 +25,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarDateRangePicker } from "@/components/dashboard/date-range-picker";
 import { Overview } from "@/components/dashboard/overview";
 import { Search } from "@/components/dashboard/search";
-import TeamSwitcher from "@/components/dashboard/team-switcher";
 import { Globe, Package, TrendingUp, Activity, ChevronDown, Check, Info, Code, BookOpen } from "lucide-react";
 import Highcharts from "highcharts/highstock";
 import HighchartsReact from "highcharts-react-official";
@@ -35,7 +34,7 @@ import { cn } from "@/lib/utils";
 export default function DashboardPage() {
   const wpData = window.wordpressPluginBoilerplate || {};
   const apiUrl = wpData.apiUrl || "";
-  const routePrefix = wpData.routePrefix || "wordpress-plugin-boilerplate/v1";
+  const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
 
   const [stats, setStats] = useState({
     totalCountries: 0,
@@ -97,7 +96,6 @@ export default function DashboardPage() {
       <div className="hidden dark:bg-gray-900 flex-col md:flex">
         <div className="border-b">
           <div className="flex h-16 items-center px-4">
-            <TeamSwitcher />
             <div className="ml-auto flex items-center space-x-4">
               <Search />
             </div>

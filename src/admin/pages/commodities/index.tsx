@@ -60,7 +60,7 @@ export default function CommoditiesPage() {
       const wpData = window.wordpressPluginBoilerplate || {};
       const apiUrl = wpData.apiUrl;
       const routePrefix = wpData.routePrefix;
-      // const routePrefix = wpData.route_prefix || "wordpress-plugin-boilerplate/v1";
+      // const routePrefix = wpData.route_prefix || "african-energy-reports-plugin/v1";
       const response = await fetch(
         `${apiUrl}${routePrefix}/commodities/get`
       );
@@ -118,7 +118,7 @@ export default function CommoditiesPage() {
     try {
       const wpData = window.wordpressPluginBoilerplateAdmin || {};
       const apiUrl = wpData.apiUrl || "";
-      const routePrefix =  "wordpress-plugin-boilerplate/v1";
+      const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
       const response = await fetch(
         `${apiUrl}${routePrefix}/commodities/delete`,
         {

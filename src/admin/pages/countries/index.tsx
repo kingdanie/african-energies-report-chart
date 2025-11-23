@@ -59,7 +59,7 @@ interface Country {
 export default function CountriesPage() {
   const wpData = window.wordpressPluginBoilerplate || {};
   const apiUrl = wpData.apiUrl || "";
-  const routePrefix = wpData.routePrefix || "wordpress-plugin-boilerplate/v1";
+  const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [allCountries, setAllCountries] = useState<Country[]>([]);

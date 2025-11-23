@@ -83,7 +83,7 @@ interface BasketPrice {
 
 const wpData = window.wordpressPluginBoilerplate || {};
 const apiUrl = wpData.apiUrl;
-const routePrefix = wpData.routePrefix;
+const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
 
 const ITEMS_PER_PAGE = 10;
 

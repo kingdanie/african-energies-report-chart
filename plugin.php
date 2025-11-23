@@ -32,7 +32,7 @@ final class AERChartPlugin {
 		define( 'AER_DIR', plugin_dir_path( __FILE__ ) );
 		define( 'AER_URL', plugin_dir_url( __FILE__ ) );
 		define( 'AER_ASSETS_URL', AER_URL . '/assets' );
-		define( 'AER_ROUTE_PREFIX', 'wordpress-plugin-boilerplate/v1' );
+		define( 'AER_ROUTE_PREFIX', 'african-energy-reports-plugin/v1' );
 	}
 
 	/**

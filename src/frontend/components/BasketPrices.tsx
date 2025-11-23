@@ -51,7 +51,7 @@ type TimeRange = "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
 export default function BasketPrices() {
   const wpData = window.wordpressPluginBoilerplateFrontend || {};
   const apiUrl = wpData.apiUrl || "";
-  const routePrefix = wpData.routePrefix || "wordpress-plugin-boilerplate/v1";
+  const routePrefix = wpData.routePrefix || "african-energy-reports-plugin/v1";
 
   const [basketPrices, setBasketPrices] = useState<BasketPrice[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);

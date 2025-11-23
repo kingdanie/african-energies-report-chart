@@ -20,7 +20,7 @@ class Menu {
 	 *
 	 * @var string
 	 */
-	private $parent_slug = 'wordpress-plugin-boilerplate';
+	private $parent_slug = 'african-energy-reports-plugin';
 
 	/**
 	 * Initializes the admin menu.
@@ -80,7 +80,7 @@ class Menu {
 				'menu_title'  => __( 'Commodities', 'aer-chart-plugin' ),
 				'capability'  => 'manage_options',
 				'menu_slug'   => $plugin_url . '/#/commodities',
-				'function'    => null, // Uses the same callback function as parent menu.
+				'function'    => null, 
 			),
 			array(
 				'parent_slug' => $this->parent_slug,
@@ -88,34 +88,8 @@ class Menu {
 				'menu_title'  => __( 'Countries', 'aer-chart-plugin' ),
 				'capability'  => 'manage_options',
 				'menu_slug'   => $plugin_url . '/#/countries',
-				'function'    => null, // Uses the same callback function as parent menu.
+				'function'    => null, 
 			),
-			// array(
-			// 	'parent_slug' => $this->parent_slug,
-			// 	'page_title'  => __( 'Inbox', 'aer-chart-plugin' ),
-			// 	'menu_title'  => __( 'Inbox', 'aer-chart-plugin' ),
-			// 	'capability'  => 'manage_options',
-			// 	'menu_slug'   => $plugin_url . '/#/inbox',
-			// 	'function'    => null, // Uses the same callback function as parent menu.
-			// ),
-
-			// array(
-			// 	'parent_slug' => $this->parent_slug,
-			// 	'page_title'  => __( 'Chart', 'aer-chart-plugin' ),
-			// 	'menu_title'  => __( 'Chart', 'aer-chart-plugin' ),
-			// 	'capability'  => 'manage_options',
-			// 	'menu_slug'   => $plugin_url . '/#/charts',
-			// 	'function'    => null, // Uses the same callback function as parent menu.
-			// ),
-
-			// array(
-			// 	'parent_slug' => $this->parent_slug,
-			// 	'page_title'  => __( 'Settings', 'aer-chart-plugin' ),
-			// 	'menu_title'  => __( 'Settings', 'aer-chart-plugin' ),
-			// 	'capability'  => 'manage_options',
-			// 	'menu_slug'   => $plugin_url . '/#/settings',
-			// 	'function'    => null, // Uses the same callback function as parent menu.
-			// ),
 		);
 
 		$plugin_submenu_pages = apply_filters( 'aer_submenu_pages', $submenu_pages );
