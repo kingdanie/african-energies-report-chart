@@ -1,6 +1,6 @@
-# WordPress Plugin Boilerplate
-Create your WordPress plugin in weeks, not months. Rapidly prototype and deliver your plugin with confidence!
-This boilerplate has a built-in marketing site and documentation setup that you can use to showcase your plugin.
+# African Energies Report Plugin
+A plugin that helps African Energies Report Admins to  manage price data and display on desired page using short codes.
+
 ## Preview
 
 <a href='https://prappo.github.io/wordpress-plugin-boilerplate/preview' target="_blank"><img alt='Wordpress' src='https://img.shields.io/badge/Live_Preview-100000?style=for-the-badge&logo=Wordpress&logoColor=white&labelColor=21759B&color=21759B'/></a>
@@ -10,23 +10,18 @@ This boilerplate has a built-in marketing site and documentation setup that you 
 <table>
  
   <tr>
-  <td><img src="documentation/public/artworks/images/chart.png" /></td>
   <td><img src="documentation/public/artworks/images/dashboard-light.png" /></td>
+  <td><img src="documentation/public/artworks/images/basket-prices.png" /></td>
   </tr>
   <tr>
-    <td><img src="documentation/public/artworks/images/inbox-light.png" /></td>
-    <td><img src="documentation/public/artworks/images/settings-light.png" /></td>
+    <td><img src="documentation/public/artworks/images/commodities.png" /></td>
+    <td><img src="documentation/public/artworks/images/countries.png" /></td>
     
   </tr>
   
 </table>
 
-## ☕️ Buy me a coffee
 
-Whether you use this project, have learned something from it, or just like it, please consider supporting it by buying
-me a coffee, so I can dedicate more time on open-source projects like this :)
-
-<a href="https://buymeacoffee.com/prappo" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
 
 ## Install using CLI tool
 
@@ -121,8 +116,8 @@ It will install the component in `src/components` folder.
         <details>
         <summary><strong>📂 Migrations</strong></summary>
         <ul>
-          <li><summary><strong>📄 create_posts_table.php</strong></summary></li>
-          <li><summary><strong>📄 create_users_table.php</strong></summary></li>
+          <li><summary><strong>📄 create_basket_prices_table.php</strong></summary></li>
+          <li><summary><strong>📄 create_commodities_table.php</strong></summary></li>
         </ul>
         </details>
         </li>
@@ -130,8 +125,8 @@ It will install the component in `src/components` folder.
         <details>
         <summary><strong>📂 Seeders</strong></summary>
         <ul>
-          <li><summary><strong>📄 PostSeeder.php</strong></summary></li>
-          <li><summary><strong>📄 UserSeeder.php</strong></summary></li>
+          <li><summary><strong>📄 BasketPricesSeeder.php</strong></summary></li>
+          <li><summary><strong>📄 CountrySeeder.php</strong></summary></li>
         </ul>
         </details>
         </li>
@@ -187,19 +182,6 @@ Route::prefix( $prefix, function( Route $route ) {
     $route->get( $endpoint, $callback, $auth = false );
     $route->post( $endpoint, $callback, $auth = false );
 });
-
-// Authentication.
-Route::prefix( $prefix, function( Route $route ) 
-    $route->post( $endpoint, $callback, $auth = false );
-})->auth( 'AuthController@check' );
-```
-#### API Example
-```php
-// Get All posts
-$route->get( '/posts/get', '\WordPressPluginBoilerplate\Controllers\Posts\Actions@get_all_posts' );
-
-// Get Single Posts
-$route->get( '/posts/get/{id}', '\WordPressPluginBoilerplate\Controllers\Posts\Actions@get_post' );
 ```
 
 ## ORM ( Object Relational Mapping )
@@ -210,71 +192,6 @@ You can find the ORM documentation [here](https://github.com/prappo/wp-eloquent)
 
 Create your model in `includes/Models` folder.
 
-Example: `includes/Models/Posts.php`
-
-```php
-<?php
-
-namespace WordPressPluginBoilerplate\Models;
-
-use Prappo\WpEloquent\Database\Eloquent\Model;
-
-class Posts extends Model {
-	/**
-	 * The table associated with the model.
-	 *
-	 * @var string
-	 */
-	protected $table = 'posts';
-
-	/**
-	 * The attributes that are mass assignable.
-	 *
-	 * @var array
-	 */
-	protected $fillable = array( 'post_title', 'post_content' );
-}
-
-```
-
-You can access all your posts like this:
-
-```php
-$posts = Posts::all();
-```
-
-You can also create a new post like this:
-
-```php
-$post = Posts::create( array( 'post_title' => 'Hello World', 'post_content' => 'This is a test post' ) );
-```
-
-You can also update a post like this:
-
-```php
-$post = Posts::find( 1 );
-$post->post_title = 'Hello World';
-$post->save();
-```
-
-You can also delete a post like this:
-
-```php
-$post = Posts::find( 1 );
-$post->delete();
-```
-
-You can also use the `where` method to filter your posts.
-
-```php
-$posts = Posts::where( 'post_title', 'like', '%hello%' )->get();
-```
-
-You can also use the `orderBy` method to sort your posts.
-
-```php
-$posts = Posts::orderBy( 'post_title', 'desc' )->get();
-```
 
 ## Passing data from backend to frontend
 
@@ -294,54 +211,15 @@ https://github.com/prappo/wordpress-plugin-boilerplate/blob/8d982b63f50beb1dffd4
 
 ## Shortcode
 
-You can create a shortcode by using the `Shortcode` class.
+To display the basketprice chart using this `Shortcode` 
+ ```bash 
+ [aer_basket_prices]
+ ```
 
-```php
-
-/**
- * Example Usage
- * 
- * Registering a shortcode that renders a PHP view file
- */
-Shortcode::add()
-    ->tag('myshortcode')
-    ->attrs(['id', 'name'])
-    ->render( plugin_dir_path( __FILE__ ) . 'views/shortcode/myshortcode.php');
-
-/**
- * Registering a shortcode that renders with a function
- */
-Shortcode::add()
-    ->tag('customshortcode')
-    ->attrs(['title', 'class'])
-    ->render(function($atts, $content) {
-        return "<div class='{$atts['class']}'><h3>{$atts['title']}</h3><p>{$content}</p></div>";
-    });
-```
-
-The php render file should be in the `views/shortcode` folder.
-
-For example: `views/shortcode/myshortcode.php`
-
-```php
-<div id="<?= isset($id) ? esc_attr($id) : '' ?>" class="shortcode-box">
-    <h3><?= isset($name) ? esc_html($name) : 'Default Title' ?></h3>
-    <p><?= isset($shortcode_content) ? esc_html($shortcode_content) : '' ?></p>
-</div>
-```
-
-### Example Usage in WordPress editor
-
-```
-
-[myshortcode id="box1" name="Example Shortcode"]
-This is the content inside the shortcode.
-[/myshortcode]
-
-[customshortcode title="Dynamic Title" class="highlight"]
-Some highlighted content.
-[/customshortcode]
-```
+and the commodities data using this
+ ```bash 
+ [aer_commodities]
+ ```
 
 ## Development
 
@@ -386,17 +264,4 @@ npm run release
 
 It will create a relase plugin in `release` folder
 
-## Trouble shooting
-
-If you are facing any issue with the development server, you can try the following steps:
-
-1. If you are using Local WP you might see dev server is not working because of SSL certificate issue or domain mismatch.You can fix this by chaning your `Router mode` to `localhost`.
-
-2. Sometimes you might see on the first run of `npm run dev` you might see nothing is happening. You can try to run `npm run dev` again.
-
-
-## Made with WordPress Plugin Boilerplate
-[WordPress AI Assistant](https://github.com/prappo/wordpress-ai-assistant)
-
-<img src="https://github.com/prappo/wordpress-ai-assistant/blob/main/docs/screenshots/wordpress-assistant-chat.png" />
 
