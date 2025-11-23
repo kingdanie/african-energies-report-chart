@@ -33,7 +33,10 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, ChevronDown, Check } from "lucide-react";
+import { Plus, Edit, Trash2, Check } from "lucide-react";
+import {
+  CaretSortIcon
+} from "@radix-ui/react-icons"
 import { cn } from "@/lib/utils";
 
 declare global {
@@ -193,11 +196,11 @@ export default function CountriesPage() {
   };
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Countries</h2>
-        <div className="flex items-center gap-4">
-          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+    <>
+      <div className="hidden dark:bg-gray-900 flex-col md:flex">
+      <div className="border-b">
+        <div className="flex h-16 items-center px-4">
+        <Popover open={filterOpen} onOpenChange={setFilterOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -210,7 +213,7 @@ export default function CountriesPage() {
                   : statusFilter === "active"
                   ? "Active Only"
                   : "Inactive Only"}
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                 <CaretSortIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[200px] p-0">
@@ -269,6 +272,12 @@ export default function CountriesPage() {
               </Command>
             </PopoverContent>
           </Popover>
+        </div>
+      </div>
+    <div className="p-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">Countries</h2>
+        <div className="flex items-center gap-4">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={openDialog}>
@@ -425,6 +434,8 @@ export default function CountriesPage() {
         </CardContent>
       </Card>
     </div>
+    </div>
+    </>
   );
 }
 

@@ -99,14 +99,14 @@ class Menu {
 			// 	'function'    => null, // Uses the same callback function as parent menu.
 			// ),
 
-			array(
-				'parent_slug' => $this->parent_slug,
-				'page_title'  => __( 'Chart', 'aer-chart-plugin' ),
-				'menu_title'  => __( 'Chart', 'aer-chart-plugin' ),
-				'capability'  => 'manage_options',
-				'menu_slug'   => $plugin_url . '/#/charts',
-				'function'    => null, // Uses the same callback function as parent menu.
-			),
+			// array(
+			// 	'parent_slug' => $this->parent_slug,
+			// 	'page_title'  => __( 'Chart', 'aer-chart-plugin' ),
+			// 	'menu_title'  => __( 'Chart', 'aer-chart-plugin' ),
+			// 	'capability'  => 'manage_options',
+			// 	'menu_slug'   => $plugin_url . '/#/charts',
+			// 	'function'    => null, // Uses the same callback function as parent menu.
+			// ),
 
 			// array(
 			// 	'parent_slug' => $this->parent_slug,
