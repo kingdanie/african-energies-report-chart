@@ -93,6 +93,25 @@ export default function DashboardPage() {
     recentBasketPrices: recentBasketPrices || [],
   };
 
+  /**
+   * Prepare simple data for the Overview bar chart from recent basket prices.
+   */
+  const overviewChartData =
+    (stats.recentBasketPrices || []).map((price) => {
+      const day = price && price.day ? price.day : null;
+      const value1 =
+        price && typeof price.value_label_1 !== "undefined"
+          ? Number(price.value_label_1)
+          : 0;
+
+      const dayLabel = day ? new Date(day).toLocaleDateString() : "N/A";
+
+      return {
+        name: dayLabel,
+        total: isNaN(value1) ? 0 : value1,
+      };
+    }) || [];
+
   const loading = countriesLoading || commoditiesLoading || basketPricesLoading;
 
   return (
@@ -200,7 +219,7 @@ export default function DashboardPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pl-2">
-                    <Overview />
+                    <Overview data={overviewChartData} />
                   </CardContent>
                 </Card>
                 <Card className="col-span-3">
