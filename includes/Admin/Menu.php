@@ -60,8 +60,8 @@ class Menu {
 		$submenu_pages = array(
 			array(
 				'parent_slug' => $this->parent_slug,
-				'page_title'  => __( 'Dashboard', 'aer-chart-plugin' ),
-				'menu_title'  => __( 'Dashboard', 'aer-chart-plugin' ),
+				'page_title'  => __( 'Analytics', 'aer-chart-plugin' ),
+				'menu_title'  => __( 'Analytics', 'aer-chart-plugin' ),
 				'capability'  => 'manage_options',
 				'menu_slug'   => $this->parent_slug,
 				'function'    => array( $this, 'admin_page' ), // Uses the same callback function as parent menu.
